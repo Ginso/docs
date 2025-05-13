@@ -1,6 +1,6 @@
 ---
 title: "Ginso's BGA Library"
-description: "Welcome to the home of your new documentation"
+description: "Welcome to the documentation of my core library"
 ---
 
 <img
@@ -9,15 +9,79 @@ description: "Welcome to the home of your new documentation"
   alt="Hero Light"
 />
 
-<img
-  className="hidden dark:block"
-  src="/images/hero-dark.png"
-  alt="Hero Dark"
-/>
+## About
+
+This "library" makes develepoing many games(especially euro games) much simpler, as it provides structures for
+
+- undo function (of single and all undoable actions)
+- follow-up actions (actions that can trigger a variety of other actions)
+- player actions in general
+- many small helper functions
+
+It is suited for games where the main part of the game has only one active player at a time.\
+If you have already started devoleoping, it will of course be more difficult to integrate the library into your project, depending on how much you have already done. It might be easier to start a new project, include the library and keep your old code ready for copying various snippets.
 
 ## Setting up
 
-The first step to world-class documentation is setting up your editing environments.
+Clone the repository from GitHub into your modules directory and name it "core":
+
+```
+git clone https://github.com/Ginso/BGA-Core.git modules/core
+```
+
+There are a few changes you will have to make to the auto-generated files.\
+You can either do them step by step or download the templates and replace the class and game names with your game. If you haven't started developing yet, i recommend the templates.
+
+### Using the Templates
+
+The templates are available here:\
+// TODO
+
+DO NOT replace the auto-generated files yet. Download them and save them somewhere.\
+Open **Game.php** (both the original and the template)\
+In the template replace the following lines with the respective line from the generated file.
+
+- `namespace Bga\Games\MyGame;`
+- `return "MyGame";` (in the function getGameName)
+
+### Editing the generated files
+
+**Game.php**
+
+- insert the following AFTER the generated require_once statement:\
+  (you probably won't need all the use statements, but to simplify matters, i recommend to just put them in every file)
+
+  ```
+  require_once(__DIR__ . "/../core/php/Core.php");
+  use \Bga\Games\Core\DB;
+  use \Bga\Games\Core\Core;
+  use \Bga\Games\Core\Actions;
+  use \Bga\Games\Core\Deck;
+  use \Bga\Games\Core\Log;
+  use \Bga\Games\Core\Utils;
+  use \Bga\Games\Core\Constants;
+  ```
+- At the BEGINNING of the class (after `class Game extends \Table {`) insert\
+  `use \Bga\Games\Core\PlayerTurn;`
+- replace the constructor with the following:
+
+  ```
+  public function __construct() {
+  	parent::__construct();
+  	Core::initGame($this);
+  	// define how the game ends. default: ENDVARIANT_END_ROUND
+  	//Core::$endVariant = ENDVARIANT_END_ROUND_PLUS_ONE;
+  }
+  ```
+- optional: implement the following function and fill it with your gamestatevalues. \
+  Don't use ids below 20
+
+  ```
+  public function extendGlobalIds() {
+  	Core::$globalIds["myGamestateLabel"] = 20;
+  }
+  ```
+- replace the first line of getAllDatas with `$result = Core::initGamedatas();`
 
 <CardGroup cols={2}>
   <Card title="Edit Your Docs" icon="pen-to-square" href="https://mintlify.com/docs/quickstart">
