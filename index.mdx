@@ -1,13 +1,6 @@
 ---
-title: "Ginso's BGA Library"
-description: "Welcome to the documentation of my core library"
+title: "Setup"
 ---
-
-<img
-  className="block dark:hidden"
-  src="/images/hero-light.png"
-  alt="Hero Light"
-/>
 
 ## About
 
@@ -21,13 +14,15 @@ This "library" makes develepoing many games(especially euro games) much simpler,
 It is suited for games where the main part of the game has only one active player at a time.\
 If you have already started devoleoping, it will of course be more difficult to integrate the library into your project, depending on how much you have already done. It might be easier to start a new project, include the library and keep your old code ready for copying various snippets.
 
-## Setting up
+## Download the code
 
 Clone the repository from GitHub into your modules directory and name it "core":
 
 ```
 git clone https://github.com/Ginso/BGA-Core.git modules/core
 ```
+
+## Modify your project
 
 There are a few changes you will have to make to the auto-generated files.\
 You can either do them step by step or download the templates and replace the class and game names with your game. If you haven't started developing yet, i recommend the templates.
@@ -37,16 +32,26 @@ You can either do them step by step or download the templates and replace the cl
 The templates are available here:\
 // TODO
 
-DO NOT replace the auto-generated files yet. Download them and save them somewhere.\
-Open **Game.php** (both the original and the template)\
+DO NOT replace the auto-generated files yet. Download them and save them somewhere.
+
+In every js and php file adjust the comment at the top
+
+\
+Open **<u>Game.php</u>** (both the original and the template)\
 In the template replace the following lines with the respective line from the generated file.
 
 - `namespace Bga\Games\MyGame;`
 - `return "MyGame";` (in the function getGameName)
 
+Open **<u>X.js</u>** (and your generated js file)
+
+- replace 'x' in the line `return declare("bgagame.x", [` with your game name as in the respective line from your generated file
+
+The rest of the files can just replace the generated files
+
 ### Editing the generated files
 
-**Game.php**
+**<u>Game.php</u>**
 
 - insert the following AFTER the generated require_once statement:\
   (you probably won't need all the use statements, but to simplify matters, i recommend to just put them in every file)
@@ -83,30 +88,37 @@ In the template replace the following lines with the respective line from the ge
   ```
 - replace the first line of getAllDatas with `$result = Core::initGamedatas();`
 
-<CardGroup cols={2}>
-  <Card title="Edit Your Docs" icon="pen-to-square" href="https://mintlify.com/docs/quickstart">
-    Get your docs set up locally for easy development
-  </Card>
-  <Card title="Preview Changes" icon="image" href="https://mintlify.com/docs/development">
-    Preview your changes before you push to make sure they're perfect
-  </Card>
-</CardGroup>
+**<u>X.js</u>**
 
-## Make it yours
+- make sure the follwing lines are below the line `define([` at the top
 
-Update your docs to your brand and add valuable content for the best user conversion.
+  ```
+  "dojo","dojo/_base/declare",
+  "ebg/core/gamegui",
+  "ebg/counter",
+  "ebg/stock",
+  g_gamethemeurl + 'modules/core/js/core.js',
+  g_gamethemeurl + 'modules/core/js/playerTurn.js',
+  g_gamethemeurl + 'modules/core/translations/tooltips.js',
+  g_gamethemeurl + 'modules/core/translations/buttons.js',
+  g_gamethemeurl + 'modules/core/translations/actionbar.js',
+  g_gamethemeurl + 'modules/core/translations/dialogs.js',
+  g_gamethemeurl + 'modules/core/translations/general.js',
+  ```
+- insert this after `ebg.core.gamegui`(below `return declare...` )
 
-<CardGroup cols={2}>
-  <Card title="Customize Style" icon="palette" href="https://mintlify.com/docs/settings/global">
-    Customize your docs to your company's colors and brands
-  </Card>
-  <Card title="Reference APIs" icon="code" href="https://mintlify.com/docs/api-playground/openapi">
-    Automatically generate endpoints from an OpenAPI spec
-  </Card>
-  <Card title="Add Components" icon="screwdriver-wrench" href="https://mintlify.com/docs/content/components/accordions">
-    Build interactive features and designs to guide your users
-  </Card>
-  <Card title="Get Inspiration" icon="stars" href="https://mintlify.com/customers">
-    Check out our showcase of our favorite documentation
-  </Card>
-</CardGroup>
+  ```
+  core.Core,
+  core.PlayerTurn,
+  core.Tooltips,
+  core.Buttons,
+  core.Actionbar,
+  core.Dialogs,
+  core.General,
+  ```
+- rename setup to setupCustom (the library implements setup and calls setupCustom)
+- instead of adding html to game_play_area add it to `${this.game_name}Inner` (See the template for example)
+- implement the function `undoAction: function(entry, player) {}` \
+  See the documentation about undo
+- register the following notifications:\
+  undo, msg, endGame, endScore and (if you want to use it) debugNotif
