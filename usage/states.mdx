@@ -1,5 +1,5 @@
 ---
-title: "States"
+title: "States and Actions"
 description: "Description of your new file."
 ---
 
@@ -31,8 +31,52 @@ What you need to do:
   \$args will contain the array given to that action and \$actIdx will be the action if it is a follow-up or the action constant if it is a free or main action (that's why they have to be negative, so you can distinguish them here)\
   Here you can handle stuff like checking if the player really can do the action(not necessary for follow-up) or storing that a main action has been done...
 - implement a function for each action in your custom Player class. The name of the function must conform to the name of the constant. For example if the constant is called ACTION_PLAY_CARD you need to implement `public function playCard` the first parameter will contain the arguments from the followup-action as stored in the db. for main and free actions it will always be null, the other parameters can be whatever you need for the action and have to be given by the front end (again see [Playerturn frontend](/usage/playerturnJS))
+- whenever a player receives a follow-up action call Action::addFollowUpAction
 
-### arguments
+## The Action class
+
+The class Action from the library handles the follow-up actions. \
+Follow-up actions arde returned as arrays with the following entries:
+
+- id(int): unique id for the database
+- action(int): the type (constant) of the action
+- args: arguments for the action, can be anything, but usually an array. is stored as json
+- player(int): the player id of the player who got it
+
+parent(int): null or the id of another follow-up action that triggered this action
+
+### (static) functions of the Action class
+
+- `getFollowUpActions(?int $pid=null, bool $currentLevelOnly = true)`\
+  returns all possible actions for a player
+  - \$pid: the player_id of the player. if null is given(default) the active player is assumed
+  - \$currentLevelOnly: For this parameter you have to ask yourself the following:\
+    Assume a player has multiple follow-up-actions and resolves one of them which gives him new follow-up-actions. Does he have to resolve them before doing any of the other follow-up action(because they "belong" to the follow-up action he just did) or can he do all follow-up actions in any order? If he has to do the new ones first use true(default) otherwise false
+- `getFollowUpActionsOfType(int $type, ?int $pid=null)`\
+  returns all followup actions of a given action. \$pid as above
+- `getFollowUpActionTree(int $pid)` returns the actionTree as needed by the frontend. YOu probably won't need to call this
+- `getFollowUpAction(int $id)`\
+  returns the follow-up action with the given id
+- `getFollowUpActionsPerPlayer()`\
+  returns an assiocatives array with player_ids mapping to the possible actions of that player
+- `otherPlayersHaveActions(int $pid)`\
+  checks if any player other than \$pid have any follow-up actions
+- `addFollowUpAction(int $action, array $args=[], int $origin=0, ?int $pid=null, int $amount=1, bool $notif=true)`\
+  adds a follow-up-action
+  - \$type: the action constant
+  - \$args: arguments for the action
+  - \$origin: origin of the action. See [notifiactions](/usage/notifications)
+  - \$pid: id of the player to receive the action. null for active player
+  - \$amount: how often
+  - \$notif: if a notifcation should be send
+- `removeFollowUpAction(int $id)`
+- `resetFollowUpActions(?int $pid=null)`\
+  removes all follow-up actions for a player
+- `getActionName(int $action, bool $lowerCase=true)` \
+  searches for a constant with the given value and starting with ACTION\_ and returning the name in camel-case\
+  For example if the constant is named ACTION_PLAY_CARD, this will return 'playCard' (or 'PlayCard' if \$lowercase is false)
+
+## Arguments for the state
 
 The arguments for this state are calculated in the [Player](/usage/player) class. In your custom Player class implement the function `getActionArgsImpl` . It should return an array with the following entries
 

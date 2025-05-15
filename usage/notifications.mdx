@@ -1,0 +1,30 @@
+---
+title: "NotificationManager"
+---
+
+The NotificationManager is the class i use to send all notifications.\
+The template for your custom class comes with 2 functions:
+
+## getActionText
+
+whenever a player gets a follow-up action
+
+## getOriginText
+
+In some complex games it can sometimes get confusing why a player is getting something. That's why i like to add a small hint to the notifications about getting things. (see Nukleum or Revive, for ex.)\
+I usually define constants for possible sources (like ORIGIN_CARD, ORIGIN_TECH, etc.) and use this function to map them to the text.\
+For example `Action::addFollowUpAction` (see [states and actions](/usage/states)) sends a notification that appends the origin in brackets, unless this function returns null.\
+The function should return the string using clienttranslate.
+
+## Predefined notifications
+
+These notfication names are used by library and should therefore not be used otherwise:\
+undo, msg, endGame, debugNotif
+
+The core class provides the following function for you:
+
+`public static function msg(string $msg, array $args=[], $pid=null)`\
+You can use this when you just want to inform all players about something happening without anything else happening on the frontend. The notification will always have the argument 'player_name' with the name of the active player (or of \$pid if given) and you can give additional arguments for the text. \
+Ex.: `NotificationManager::msg(clienttranslate('${player_name} chooses not to take the ${n} cards', ["n" => $amount]);`
+
+The other functions should only used by the library, except debugNotif, see [debugging](/usage/debugging)

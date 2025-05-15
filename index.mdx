@@ -14,7 +14,8 @@ This "library" makes develepoing many games(especially euro games) much simpler,
 It is suited for games where the main part of the game has only one active player at a time.\
 If you have already started devoleoping, it will of course be more difficult to integrate the library into your project, depending on how much you have already done. It might be easier to start a new project, include the library and keep your old code ready for copying various snippets.
 
-If you have any questions, you can find me on BGA as [Ginso](https://boardgamearena.com/player?id=88401979)
+If you have any questions, you can find me on BGA as [Ginso](https://boardgamearena.com/player?id=88401979)\
+For questions about usages you can also check my nucleum implementation
 
 ## Download the code
 
@@ -43,7 +44,7 @@ In **<u>Game.php</u>** also replace the line`return "mygame";` with the respecti
 
 In **<u>X.js</u>** replace 'x' in the line `return declare("bgagame.x", [` with your game name as in the respective line from your generated js file
 
-Once you edited all php and the js files you can replace the generated files with them 
+Once you edited all php and the js files you can replace the generated files with them
 
 The files NotificationManager.php, Player.php and Stuff.php don't replace anything. Just put them into your modules directory. (You can create subfolders if you like, in wich case you need to change the import in the Game.php)\
 All 3 have a counterpart in the library and they each extend the class defined in that counterpart. In this documentation i will refer to the files from the library as the core class and the ones from the template as the custom class. So, the custom class is a subclass of the core class and you will only edit the custom class
@@ -52,3 +53,8 @@ All 3 have a counterpart in the library and they each extend the class defined i
 
 If you really need to change files in the library, you can do it of course. But keep it mind that it could create conflicts if you ever update it to a new version.\
 Instead consider contacting me and tell me why you want to change it.
+
+## Accessing the Game instance
+
+The Core class keeps the isntance of the Game class in the variable \$game, so you can access functions like notifyAllPlayers from everywhere like this:\
+`Core::$game->notifyAllPlayers`

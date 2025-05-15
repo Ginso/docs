@@ -1,5 +1,42 @@
 ---
-title: 'New file'
-description: 'Description of your new file.'
+title: "Undo"
+description: "This library makes it very easy to provide an undo function. Here the user can press 'undo' to undo the last action or 'undo all' to undo all undoable actions"
 ---
 
+## Logs
+
+In order to undo actions you need to log every change. Each action can generate multiple log entries.\
+You'll have to define different log types, and for each log type, how to undo this (on backend and on frontend).\
+When the player hits undo or undo all, the log entries will be handled one after another in reverse order.\
+During the player action you can add a log entry with `Core::addLog([$type,$arg1,$arg2...])` \
+The actPlayerAction automatically saves them. If you define any other actions that should create an entry, you should initialize the logs with `Core::$logData = [];` and at the end save them with\
+`Log::addLog(Core::$logData);`\
+Each log entry is a simple array with the first entry being the log type. I stringly advice defining constants for them. The library already has 6 types defined, so best start with 10 (leaving room for updates). The remaining entries depend on the log type. To keep an overview i recommend a comment behind every constant where you state, what the remaining entries should be.\
+The predefined types are:
+
+- LOG_ADD_ACTION and LOG_REMOVE_ACTION: Used by the Action class.\
+  Check their usages if you think you need to use them
+- LOG_SET_GLOBAL: used when you call Core::setGlobal or Core::getGlobal.\
+  Check the usage if you think you need to use them
+- LOG_GAME_END: used when you trigger Core::toggleGameEnd()
+- LOG_MOVE_STUFF: If you use the Stuff table, you can use this whenever location and/or location_arg of an entry is changed. It requires the follwing arguments:
+  1. id of the entry
+  2. new location
+  3. new location_arg
+  4. type
+- LOG_ADD_STUFF: If you use the Stuff table, you can use this whenever new stuff is added during the game. It requires the id and type of the element
+
+For the backend undoing these predefined types is already implemented. For the frontend you only need to implement the last 2 (if you use them)
+
+## Undoing your logs
+
+### backend
+
+The template of your Game.php comes with the function `undoAction`\
+It is called for every log entry when it should be undone. The first argument is the log entry.\
+it also gives you an associative array of all players (id =\> player, see [Player class](/usage/player)) and the id of the player undoing the action
+
+### frontend
+
+Quite similar the template for your js file comes also with the function `undoAction`\
+Since all come with one notification, i stringly recommend to avoid animations here

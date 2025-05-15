@@ -24,7 +24,9 @@
             "pages": [
               "usage/constants",
               "usage/states",
-              "usage/player"
+              "usage/player",
+              "usage/notifications",
+              "usage/undo"
             ]
           }
         ]
