@@ -1,0 +1,51 @@
+---
+title: "States"
+description: "Description of your new file."
+---
+
+As you can see, the template for the states file contains 2 more states than the generated file.\
+Usually i don't need any other states for the main part of the game. (Only for the setup, if player have to choose something)
+
+After the setup is done (including player choices), make the first player active and go to
+
+## ST_PLAYER_TURN
+
+This is the main state where the game happens. Whenever you think, you need an extra state for an action, you probably can do it using virtual states(see [Playerturn frontend](/usage/playerturnJS)) and perhaps notifications
+
+All the actions that a play can take during the main game can usually be put into these categories
+
+- Base actions: like end turn, undo, wait, refillMarket
+- Main actions: usuallay a player can or has to do a certain number of them
+- Follow-up actions: actions that become available due to any effects triggered by another action
+- Free actions: actions that can be done at any time or at certain points during the turn
+
+the base actions need to be defined in the state, the rest are handled witch `actPlayerAction` , which of course also needs to be defined in the state(see [setup](/index))\
+All the mentioned actions are already defined in the core library(and added to your game.php via the use statement during setup).\
+The follow-up actions will be stored in the database with one entry for each action. There they all have their own id. So when i speak of the id of a follow-up action i'm NOT referring to the action type, but to the id of the db-entry. They are handled by the [Action ](/usage/utils)class
+
+What you need to do:
+
+- define [constants](/usage/constants) for each action. The main and free actions should have negative values, the follow-up actions positive(may start at 0). The names of the constants should start with ACTION\_\
+  If a main action can also be a follow-up action you only need to define it once(with a negative value)
+- if you implement `public function playerAction(mixed $args, int $actIdx)` in your game.php it will be called, whenever actPlayerAction is called. (again see [Playerturn frontend](/usage/playerturnJS)) \
+  \$args will contain the array given to that action and \$actIdx will be the action if it is a follow-up or the action constant if it is a free or main action (that's why they have to be negative, so you can distinguish them here)\
+  Here you can handle stuff like checking if the player really can do the action(not necessary for follow-up) or storing that a main action has been done...
+- implement a function for each action in your custom Player class. The name of the function must conform to the name of the constant. For example if the constant is called ACTION_PLAY_CARD you need to implement `public function playCard` the first parameter will contain the arguments from the followup-action as stored in the db. for main and free actions it will always be null, the other parameters can be whatever you need for the action and have to be given by the front end (again see [Playerturn frontend](/usage/playerturnJS))
+
+### arguments
+
+The arguments for this state are calculated in the [Player](/usage/player) class. In your custom Player class implement the function `getActionArgsImpl` . It should return an array with the following entries
+
+- "actions" =\> an array of all possible actions, each entry should contain:
+  - "action" =\> the constant of that action
+  - "args" =\> the arguments for that action
+  - optional: "id" =\> for follow-up actions, this should contain the id from the db
+  - optional: "free" =\> true, if it is a free action
+  - optional: "available" =\> false, if the player currently can't perform it
+- "main" =\> if the player can perform a main action
+- "realActive" =\> true/false if the current active player is the one whos actual turn it is. Usually you can just use `Core::getGlobal("realActivePlayer") == 0`
+- "canRefillMarket" =\> is you have some form of 'market' like  a card display, set this to true if it there are empty spaces that can be refilled (see [markets](/usage/markets))
+- "canUndo" =\> if there are undoable actions use `Log::hasUndoableActions()`
+- "canEndTurn" =\> if the 'end turn' button should be displayed
+- "actionTree" =\> `Actions::getPossibleActionTree($pid)`
+- "wait" =\> in many games situaions can occur, when during a players turn, other players may take actions. When this occurs, set this to true, and the player will get a button allowing him to wait for them(of course this will finalize the current state, preventing him from undoing the actions he took so far). Usually you can just use`Actions::otherPlayersHaveActions($pid)`

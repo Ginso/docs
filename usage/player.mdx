@@ -1,0 +1,52 @@
+---
+title: "Player"
+---
+
+The file Player.php defines a class Player representing the players of the game. You should have a core class in the library and a custom class copied from the templates. All integer fields(including id) from the db will be really be integers
+
+## Getting Player instances
+
+The core class contains some static methods to get the player instances. To minimize DB requests it creates a singleton for each player. Use the following methods to get the players:
+
+- `Player::getAllplayers()` returns all players as associative array (pid =\> player).
+- `Player::getPlayersList($sort, $first)`
+  - (optional) string \$sort: specify the sort command for the DB request. (default: 'player_no')
+  - (optional) int \$first: if set to a player id, the players before that id will be moved to the end
+  - example:  Assume 4 Players and Player 12345678 has player_no 3.\
+    `Player::getPlayersList('player_no', '12345678')` will then give the 4 players so that the player_no will be 3, 4, 1, 2
+- `Player::getPlayer($id)` get the Player with the specified id
+
+also usefull: `getPlayerNum()`  to get the number of players
+
+## (Custom) Fields
+
+By default the Class loads the following fields from the player table:
+
+- id
+- name
+- score
+- color
+- no
+
+If you need any other fields, do the following steps in your \*\*custom \*\*player class:
+
+1. add the fields to the array returned by `getCustomFields()` if they have a prefix add them as in a select statement: `'player_thaler thaler'` otherwise just the name of the db field: `'achievement'`
+2. add their types to getCustomFieldTypes() so they can be parsed correctly. There is VAR_INT, VAR_STRING, VAR_BOOL, VAR_ARRAY and VAR_JSON (last one will be parsed using` json_decode($val, true)`) The key has to be the field name **without the player\_ prefix.**
+3. declare the field for the class again **without the player\_ prefix.** \
+   `public int $thaler;`
+4. assing the value to the field in `initCustomFields(array $arr)` \
+   \$arr will contain the value(already parsed)\
+   `$this->thaler = $arr['thaler'];`
+
+## Updating fields
+
+If you changed one or more fields you can just call `update()` to commit the changes to the db
+
+```
+$player->score += 5;
+$player->update();
+```
+
+### getActionArgs()
+
+returns the arguments for the state by calling getActionArgsImpl on the custom class

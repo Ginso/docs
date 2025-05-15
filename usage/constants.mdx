@@ -1,0 +1,46 @@
+---
+title: "Constants"
+description: "Description of your new file."
+---
+
+Like most games i use constants for better overview. Many of the constants are needed on both backend and frontend side. But instead of defining them twice i just send all my constants to the frontend. You should at least add your ACTION\_ (see [states](/usage/states)) and LOG\_(see [undo](/usage/undo)) constants to those.
+
+Doing that is pretty simple. Just implement `public function getCustomConstants()`  in your game.php (already present in the template) and make it return an array like:
+
+```
+public function getCustomConstants() {
+	return [
+		[ACTION_PLAY_CARD, -1],
+		// ...
+		[LOG_PLAY_CARD, 10]
+	];
+}
+```
+
+in the frontend you can then access them using this.ACTION_PLAY_CARD
+
+For bigger games you'll probably need a lot of constants, so i recommend creating a class like
+
+```
+<?php
+namespace Bga\Games\Nucleum;
+class CustomConstants {
+	public static function getConstants() {
+		return [
+			['ACTION_PLAY_TILE',-1],
+
+			['LOG_PLAY_TILE',10],
+		];
+	}
+}
+
+?>
+```
+
+and in the game.php
+
+```
+public function getCustomConstants() {
+	return CustomConstants::getConstants();
+}
+```
