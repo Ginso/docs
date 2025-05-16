@@ -5,19 +5,8 @@ title: "Frontend: General"
 ## Notifications
 
 The X.js template comes with the function setupNotifications already filled with the predefined notifications. Here you can just add your own. They duration of them are all multiples of this.animDuration, which is used in animation functions of this library. If you use them, you just need to add the number of animations in here.\
-For each of your notifications you need to define the function notif\_\<name\> (ex. `notif_playCard: function(args){}`)
+For each of your notifications you need to define the function notif_NAME (ex. `notif_playCard: function(args){}`)
 
-## Usefull functions
+## Useful functions
 
 The library also provides many helpfull functions that all be called using this.functionName()
-
-- `takeAction(action, args = {}, lock=true)`\
-  calls bgaPerformAction with the args. if not present it adds 'act' before the action  name and uppercases the first letter. if the 3rd parameter is false, it uses {lock:false, checkAction:false}\
-  If an exception is thrown, it calls onLeavingState and shortly afterwards onEnteringState
-- `addTooltipImageAndText: function(id, image, text, col=true)`\
-  adds a tooltip containing image and text, with the text being below or next to the image depending on col\
-  The container has the class tooltipContainer
-- `addTooltipWrapped(id, text)` \
-  just a Wrapper that places the text in a div with the class tooltipContainer
-- `getXY(type, cols=100)`\
-  Usefull for sprites. Converts an index (usually the type of an object) to x,y-coordinates given the number of columns. Example: `let {x,y} = this.getXY(9,4)`  results in x:1 and y:2
