@@ -1,5 +1,10 @@
 ---
-title: 'New file'
-description: 'Description of your new file.'
+title: "Markets"
 ---
 
+Most Euro Games have some form of market, like a card display or something else that is refilled whenever someone takes something out of it. Either immediately or at the end of the turn.
+
+If per rules it would happen immediately, but reveal hidden information, i let the player trigger it whenever he wants, because this will [finalize ](/usage/undo)the state. If he doesn't trigger it, the end of the turn(or waiting) will.
+
+If you have a market like that you should implement the function refillMarket in your Game.php\
+The player can trigger it, if the respective argument is true(see [Gameflow and Actions](/usage/states))

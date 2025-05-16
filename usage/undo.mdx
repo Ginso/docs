@@ -9,7 +9,7 @@ In order to undo actions you need to log every change. Each action can generate 
 You'll have to define different log types, and for each log type, how to undo this (on backend and on frontend).\
 When the player hits undo or undo all, the log entries will be handled one after another in reverse order.\
 During the player action you can add a log entry with `Core::addLog([$type,$arg1,$arg2...])` \
-The actPlayerAction automatically saves them. If you define any other actions that should create an entry, you should initialize the logs with `Core::$logData = [];` and at the end save them with\
+The actPlayerAction automatically saves them(if not empty). If you define any other actions that should create an entry, you should initialize the logs with `Core::$logData = [];` and at the end save them with\
 `Log::addLog(Core::$logData);`\
 Each log entry is a simple array with the first entry being the log type. I stringly advice defining constants for them. The library already has 6 types defined, so best start with 10 (leaving room for updates). The remaining entries depend on the log type. To keep an overview i recommend a comment behind every constant where you state, what the remaining entries should be.\
 The predefined types are:
@@ -40,3 +40,9 @@ it also gives you an associative array of all players (id =\> player, see [Playe
 
 Quite similar the template for your js file comes also with the function `undoAction`\
 Since all come with one notification, i stringly recommend to avoid animations here
+
+## Finalizing the state
+
+Of course whenever the active player changes, the current state is finalized, meaning, that all actions done so far cannot be undone anymore.\
+Whenever a player does something that reveals hidden information, you should also do that, by just calling `Log::finalizeState()` \
+Note that in these actions you should not add any logs

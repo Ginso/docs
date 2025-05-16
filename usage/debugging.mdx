@@ -1,5 +1,8 @@
 ---
-title: 'New file'
-description: 'Description of your new file.'
+title: "Debugging"
 ---
 
+## Console logs
+
+Console logs can be usefull for debugging, but once the game is on the bga website(alpha, beta or released) all your console.log() statements are being removed. That's why this library provides the function debugLog, you can use `this.debugLog` instead of console.log and it will not only call console.log(if you are in studio) but also put the log in an array, thus storing the last 30 logs. You can access them in the developer console of your browser with `this.gameui.log`\
+Also, could reenable logging for yourself by typing `this.gameui.debugLog = (x,y) => console.log(x,y)` into your console (this will stop the storing of the logs in the array)

@@ -1,5 +1,195 @@
 ---
-title: 'New file'
-description: 'Description of your new file.'
+title: "Usefull hooks and other functions"
+description: "The library comes with a lot of usefull hooks and functions"
 ---
 
+## Hooks
+
+There are some hooks that you can implement to execute code at certain points of the gameflow implemented by the library. Some of them can even prevent the normal library code. Just copy them from below into your Game.php
+
+- `function endTurn(Player $p) {}`\
+  called at the start of actEndTurn with the active player, if it returns true, nothing else will be called afterwards
+- `function wait(Player $p) {}` \
+  same for actWait
+- `function preStNextPlayer() {}`\
+  same for stNextPlayer
+- `function postStNextPlayer() {}` \
+  called at the end of stNextPlayer unless `preStNextPlayer`  prevented it or the game has ended
+- `postPlayerAction(mixed $args, int $actIdx)` \
+  called at the end of actPlayerAction, but before the logs are saved
+
+## Stuff
+
+The dbmodel.sql template contains a table for Stuff, that you can use for any sort of stuff. It has the following fields (all int):
+
+- id: a unique identifier
+- type: the general type, i recommend constants for this, like STUFF_BUILDING, STUFF_MEEPLE, etc.
+- subtype, location and location_arg:  use as you like, for ex. which type of building
+- player: can be null or the player it belongs to
+
+If those fields do not suffice for anything, you probably should create an extra table for that
+
+There is a class Stuff for it in the library and a custom subclass for in the templates, similar to Player.
+
+If you want to create subclasses for some or all types, make sure the function `toObjImpl` in your custom Stuff class returns the correct class for each type
+
+### static functions from the Stuff class
+
+- `query(?int $type=null, string $where = "", string $order = "", bool $asObj=true)` \
+  performs a query and returns the results as array
+  - \$type: if set, it queries only this type of stuff
+  - \$where: additional where conditions
+  - \$order: ORDER BY statements
+  - if false, the results will be just arrays as in getObjectListFromDB(but with parsed integers)
+- `queryCollection(?int $type=null, string $where = "", bool $asObj=true)`\
+  same as above, but returns an assiociative array using the ids as keys
+- `loadObject(int $id, bool $asObj = true)`\
+  returns the Object(as array or Stuff instance) with the given id or null if not found
+- `moveEntry(int $id, int $location, ?int $location_arg=null)`\
+  `moveEntries(array $ids, int $location, int $location_arg=0)`\
+  moves one or more entries. if location_arg is null, it is not changed\
+  **Does not create log entries**
+- `emoveEntries(array $ids)`\
+  removes the entries from the DB
+- `count(?int $type=null, string $where = "")` \
+  Returns the number of elements that meet the codition, arguments as above
+
+### member functions
+
+- `move(int $location, int $location_arg=0, bool $log=true)`\
+  same as the static, but can create log entry
+- `update()` \
+  sends all changes to the DB
+
+## Core
+
+The Core class comes with many static functions:
+
+- initGame: only needed in the cunstructor of Game.php
+- `getCurrentId()` \
+  Wrapper for getCurrentPlayerId, that parses the result to int
+- `getActivePId()`\
+  same for getActivePlayerId
+- `getRealActivePlayerId()`\
+  See section [Waiting in Gameflow](/usage/states)
+- `getActivePlayer()`  and `getRealActivePlayer()` \
+  as above, but returns a Player object
+- `addLog(array $log)`\
+  see [undo](/usage/undo)
+- `getGlobal(string $name)`\
+  Wrapper for getGameStateValue, that parses the result to int
+- `setGlobal(string $name, int $val, bool $log=true)`\
+  Wrapper for setGameStateValue, that can add log entry for undo
+- `incGlobal(string $name, int $step, bool $log=true)`\
+  increments a gamestatevalue by a given step
+- startEndgameScoring, score, finishEndGameScoring and toggleGame End, see [Gameflow](/usage/states)
+
+It also has some static variables that might be usefull to know:
+
+- `Core::$logData` contains the log entries for the current action
+- `Core::$globalIds` contains the array of gamestatevalues as used for initGameStateLabels
+- `Core::$globalNames` contains the inverted array if you ever need the name to an id
+- `Core::$game` contains the instance of Game.php, so that you can call its functions from everywhere
+
+## DB
+
+If you ever developed with JavaScript, you probably encountered the problem of accidentally concatting numbers instead of adding them because one of them is actually a string. I found that in BGA development this usually happens because the DB functions return Strings, which isn't a problem until you send them to the client. Thats why i started to make sure my numbers are properly casted. This is only one of the reasons, i created a Wrapper for the DB functions. It is simply called DB and comes with the following static functions. Some of them have an optional parameter mixed \$types, which should be either null, if you don't want to parse anything, or an array mapping the reulting column names to the types using the constants VAR_INT, VAR_STRING, VAR_BOOL, VAR_FLOAT and VAR_JSON(for json_decode(\$val, true)). If all entries have the same type, you can just use that type instead of an array
+
+- `DB::query(string $sql)`\
+  only calls DbQuery(\$sql);
+- `DB::getUniqueValue(string $sql, int $type=VAR_INT)` \
+  calls and parses(per default to int) getUniqueValueFromDB
+- `DB::getObject(string $sql, mixed $types = null)` \
+  calls and parses(if \$types is not null) getObjectFromDB
+- `DB::getCollection(string $sql, mixed $types = null, ?int $keyType = null)`\
+  calls and parses(if \$types is not null) getCollectionFromDB\
+  if \$keyType is also not null, the keys are also parsed\
+  for singleValues use:
+- `DB::getMap(string $sql, int $type = null, ?int $keyType = null)` \
+  calls and parses(if \$type is not null) getCollectionFromDB(\$sql, true)\
+  \$keyType as above
+- `DB::getObjectList(string $sql, mixed $types = null)`\
+  calls and parses(if \$type is not null) getObjectListFromDB\
+  for singleValues use:
+- `DB::getValueList(string $sql, int $type = null)`\
+  calls and parses(if \$type is not null) getObjectListFromDB(\$sql, true)
+- `DB::getDoubleKeyCollection(string $sql, mixed $types = null, array $keyTypes = null)`\
+  same as `getCollection`, but for getDoubleKeyCollectionFromDB\
+  \$keyTypes needs to be an array with the 2 key types (or null)\
+  for singleValues use:
+- `DB::getDoubleKeyValues(string $sql, int $type = null, array $keyTypes = null)`\
+  as above
+- `DB::getDoubleArray(string $sql, mixed $types = null)` \
+  a bit like getDoubleKeyCollectionFromDB, but instead of using a second column for keys just creates a list for value of the first column.\
+  Example:
+
+  ```
+  $stuff = DB::getDoubleArray("SELECT type, id, subtype, location, location_arg, player FROM stuff", VAR_INT);
+  // now $stuff[STUFF_BUILDING] looks like the result of a getObjectList-query
+  ```
+
+## Deck
+
+A Wrapper for BGA's Deck class, that allows additional fields and can return custom classes instead of arrays
+
+Let's say you want to use the Deck class, but need an additional field 'rotation'\
+Create the table with the usual fields needed for a Deck and your additional field.\
+For this example assume the table is called actionCard\
+Somewhere create a static method to get the Deck instance. 
+
+```
+public static function getActionCardDeck():Deck {
+	return new Deck('actionTiles', ["card_roation rotation"], ["rotation" => VAR_INT]);
+}
+```
+
+As you can see, the constructor takes an array with the additional column names and one with the field types. (Similar to the custom Player class). You could even overwrite the default field types, if you want to use integers for card_type (like i usually do)
+
+If you want to create a custom class for these cards, you could add the method there. To create the objects the constructor needs an addional parameter:
+
+```
+public static function getDeck():Deck {
+	return new Deck('actionTiles', [], ["type_arg" => VAR_INT], fn($arr) => new ActionCard($arr));
+}
+```
+
+Tip: i usually do this, so i can always decide, if the deck-object should return class objects or arrays:
+
+```
+public static function getDeck($asObj=true):Deck {
+	return new Deck('actionTiles', [], ["type_arg" => VAR_INT], $asObj ? fn($arr) => new ActionCard($arr) : null);
+}
+```
+
+## Utils
+
+The Utils class contains a few general php functions that i created, because i frequently use them. (Okay, 2 of them are still BGA-specific)
+
+- `die(mixed $args=null)`\
+  throws a BgaVisibleSystemException with json_encode(args, JSON_PRETTY_PRINT)\
+  I use it to check for invalid arguments in player actions and for debugging as a quick way to give out some variables at a certain point and abort the action\
+  Note, that you cannot use transalted strings here, so i only use for cases that can't happen unless a player "hacks" the interface.
+- `stop(string $msg)`\
+  similar to die, but this can actually use strings translated with \_('') and therefore can be used for situations that might normally occur. For example, if you don't want to check for every possible move of an action if the player can afford this and instead want to display an alert if he choose one he can't. For examples check out my nukleum code (models/translation/alerts.php and their usages in the code)
+- `filterColumns(array $arr, array $keys)` \
+  returns a copy of \$arr that contains only the given \$keys
+- `removePrefix(array $arr)` \
+  returns a copy of \$arr, recusrsive removes all prefixes from keys, i.e. if a key contains at least 1 underscore it removes the first one and everything before it
+- `split(string $str, string $del = ";")`\
+  works like explode, but if the string is empty it returns [] instead of [""]
+- `equals(array $arr1, array $arr2)` \
+  checks recursive, if 2 arrays are equal, using \!= and == (therefore ignoring var types)
+- `indexOf(array $arr, callable $callback)`\
+  works like findIndex in js
+- `in_array(mixed $needle, array $haystack)`\
+  same as the normal in_array, but ignores types (uses == instead of ===)
+- `deepCopy(array $arr)`\
+  copys an array recursive
+- `sum(array $arr)`\
+  sums up an array of numbers
+- `parse(mixed $val, mixed $type)`\
+  mostly helper function for the following. Parses a value to one of my VAR\_ constants. See section DB above
+- `parseAll(array $arr, mixed $type, int $keyType=null)`\
+  parses all values of an array as above. \$type can be one of the VAR\_ constants or an array mapping each key of \$arr to one of them
+- `validateJSonAlphaNum(mixed $value) `\
+  validates a json argument like in actPlayerAction

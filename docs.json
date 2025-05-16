@@ -26,7 +26,13 @@
               "usage/states",
               "usage/player",
               "usage/notifications",
-              "usage/undo"
+              "usage/undo",
+              "usage/markets",
+              "usage/utils",
+              "usage/frontend",
+              "usage/playerturnJS",
+              "usage/translations",
+              "usage/debugging"
             ]
           }
         ]

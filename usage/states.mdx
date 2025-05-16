@@ -1,6 +1,5 @@
 ---
-title: "States and Actions"
-description: "Description of your new file."
+title: "Gameflow and Actions"
 ---
 
 As you can see, the template for the states file contains 2 more states than the generated file.\
@@ -30,7 +29,8 @@ What you need to do:
 - if you implement `public function playerAction(mixed $args, int $actIdx)` in your game.php it will be called, whenever actPlayerAction is called. (again see [Playerturn frontend](/usage/playerturnJS)) \
   \$args will contain the array given to that action and \$actIdx will be the action if it is a follow-up or the action constant if it is a free or main action (that's why they have to be negative, so you can distinguish them here)\
   Here you can handle stuff like checking if the player really can do the action(not necessary for follow-up) or storing that a main action has been done...
-- implement a function for each action in your custom Player class. The name of the function must conform to the name of the constant. For example if the constant is called ACTION_PLAY_CARD you need to implement `public function playCard` the first parameter will contain the arguments from the followup-action as stored in the db. for main and free actions it will always be null, the other parameters can be whatever you need for the action and have to be given by the front end (again see [Playerturn frontend](/usage/playerturnJS))
+- implement a function for each action in your custom Player class. The name of the function must conform to the name of the constant. For example if the constant is called ACTION_PLAY_CARD you need to implement `public function playCard` the first parameter will contain the arguments from the followup-action as stored in the db. for main and free actions it will always be null, the other parameters can be whatever you need for the action and have to be given by the front end (again see [Playerturn frontend](/usage/playerturnJS))\
+  If the function returns **true, **the action will not be removed and no logs will be saved. Usefull if a decision has to be made first, (see virtual states in [playerturn frontend](/usage/playerturnJS))
 - whenever a player receives a follow-up action call Action::addFollowUpAction
 
 ## The Action class
@@ -92,4 +92,66 @@ The arguments for this state are calculated in the [Player](/usage/player) class
 - "canUndo" =\> if there are undoable actions use `Log::hasUndoableActions()`
 - "canEndTurn" =\> if the 'end turn' button should be displayed
 - "actionTree" =\> `Actions::getPossibleActionTree($pid)`
-- "wait" =\> in many games situaions can occur, when during a players turn, other players may take actions. When this occurs, set this to true, and the player will get a button allowing him to wait for them(of course this will finalize the current state, preventing him from undoing the actions he took so far). Usually you can just use`Actions::otherPlayersHaveActions($pid)`
+- "wait" =\> see below. Usually you can just use`Actions::otherPlayersHaveActions($pid)`
+
+## Waiting for other players
+
+In many games, situations may occur, where player have to take an action outside their turn, becuase the active player triggered something where they have to make a choice(like picking something). In this case the argument "wait" above should be true. If this player needs to take the action before the active one continues, also make sure, that the "actions" argument is an empty array. Then he can either undo or wait. When he clicks wait, the other player becomes active. We then have to distinguish between the active player(the one who can currently do something) and the REAL active player(the one whos turn it is and is waiting). While the real active player is waiting, his id is stored in the gamestatevalue "realActivePlayer". This variable however is normally 0 and only set when a player is waiting. With `Core::getRealActivePlayerId();` you can always get the real active player, whether he is the active one or not.\
+When calculating the arguments above, make sure to check if the active player is the real active player, since for ex. usually a player can't do the free actions outside his turn.\
+Of course, waiting for players will [finalize the current state](/usage/undo)
+
+## End of the game
+
+Most games end either at a certain points or when some condition is met. You can trigger `Core::toggleGameEnd(int $variant)` with one of the 5 ENDVARIANT\_ constants to trigger the end game either
+
+- at the end of the current round,i.e. when the player with player_no 1 would be next. (ENDVARIANT_END_ROUND)
+- at the end of the next Round (ENDVARIANT_END_ROUND_PLUS_ONE)
+- after all OTHER players have one more turn (ENDVARIANT_ALL_OTHER_PLAYER)
+- after all players including the current have one more turn (ENDVARIANT_ALL_PLAYER)
+- immediately after this turn (ENDVARIANT_END_NOW)
+
+They all work by setting a gamestatevalue to the number of turns(not rounds) remaining including the current one. Everytime stNextPlayer is called this value is decremented and if it would reach 0, the transition "end" the function `endGameScoring()` (defined in the template of Game.php) is called and then the transition "end" is used.\
+Also note, that the first 2 methods use the player_no of the (real) active player
+
+### Final Scoring
+
+Most games have a final scoring. The library provides simple functions for that, which will display a dialog with a score table to all players and a notification per player.(Like in my games Revive and Nucleum) This is done inside the function `endGameScoring(?int $sendTo = null)`  in your Game.php\
+When triggered by the end of the game, the parameter is always null.\
+In some of my games(Revive for example, although it doesn't use this library) i allow Players to check how the score would look like at the current state(as far as they can know). In this case i call this function with the id of the requesting player and inside the function, if it is not null, i only use information visible to that player.\
+If you don't want to add a functionality like that, ignore this parameter.\
+If any hidden information should be revealed at the end of the game, send the necessary notifications in here.\
+To use the library functions for scoring, you need to first call
+
+```
+$players = Player::getAllPlayers();
+Core::startEndgameScoring($players);
+```
+
+Then you can do the actual scoring. For each row of the score table, you need to call `Core::score(string $title, array $players, callable $f, bool $update=true)`
+
+- \$label: label for the start of the row (you need to call clienttranslate on it).
+- \$players: as defined above
+- \$f: a callable, that calaculates the score for a player
+- \$update: if the score field of the player object should be increased by the calculated value(Will not be send to the DB)
+
+Usually you want the callable to just return the calculated points. But in some cases you might want to display more(or something else) than just the value. \
+In this case you can return an array with the first entry being the value to be added to \$player-score(if \$update=true) and the second, the text for the cell. Note, that this will not be translated, it is only intended to display terms like "32 (4 x 8)", (again, see Revive)
+
+**Examples:**\
+If the players can already receive points during the game, you should start with something like\
+`Core::score(clienttranslate("VP so far"), $players, fn($player) => $player->score, false);`
+
+```
+$goal = Core::getGlobal("goal1");
+$this->score(GeneralTexts::getTL("scoring2"), $players, function($player) use ($goal) {
+	$p = $player->getFactor(1);
+	$count = $player->scoreGoal($goal);
+	$vp = $p*$count;
+	return [$vp, "$vp ($p x $count)"];
+});
+```
+
+Also don't forget to calculate the tie breakers. If you want to display them, you can also use that function, but with \$update=false and updating player_score_aux in the DB during the function yourself
+
+At the end, complete the scoring with `Core::finishEndGameScoring($sendTo);` \
+This will send the notifications and update the scores on the DB
