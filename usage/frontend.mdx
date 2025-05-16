@@ -10,3 +10,8 @@ For each of your notifications you need to define the function notif_NAME (ex. `
 ## Useful functions
 
 The library also provides many helpfull functions that all be called using this.functionName()
+
+- `takeAction(action, args = {}, lock=true)` \
+  calls bgaPerformAction with the args. if not present it adds 'act' before the action name and uppercases the first letter. if the 3rd parameter is false, it uses {lock:false, checkAction:false}\
+  If an exception is thrown, it calls onLeavingState and shortly afterwards onEnteringState
+- `addTooltipImageAndText: function(id, image, text, col=true)`
