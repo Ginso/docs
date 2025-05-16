@@ -23,7 +23,11 @@ The library also provides many helpfull functions that all be called using this.
   Usefull for sprites. Converts an index (usually the type of an object) to x,y-coordinates given the number of columns. Example: `let {x,y} = this.getXY(9,4)`  results in x:1 and y:2
 - `getBgPos(type, cols=100)`\
   same as above but returns the style background-position: -\${x}00% -\${y}00%;
-- `connect: function(node, f, cleanup=false, enable=false)`\
+- `connect(node, f, cleanup=false, enable=false)`\
   calls `dojo.connect(node, 'onclick', this, f)` \
   if cleanup is true disconnects the handler on cleanup(see [playerturn](/usage/playerturnJS))\
   if enable is true adds the style class 'selectable' to the node
+- `connectStock(stock, f, cleanup=true)`\
+  calls stock.setSelectionMode(1) and calls f with the id of an element once it's selected\
+  if cleanup is true, it will deselect all, setSelectionMode(0) and disconnect the handler on cleanup
+- 
