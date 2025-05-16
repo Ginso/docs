@@ -30,4 +30,13 @@ The library also provides many helpfull functions that all be called using this.
 - `connectStock(stock, f, cleanup=true)`\
   calls stock.setSelectionMode(1) and calls f with the id of an element once it's selected\
   if cleanup is true, it will deselect all, setSelectionMode(0) and disconnect the handler on cleanup
+- `placeAndConnect(html, target, f, cleanup=false, enable=false)`\
+  just combines dojo.place and this.connect from above
+- `clone(el, id, target, styles, placeOn)`\
+  clones an element and optionally places it on another
+  - el: the element to clone(the node, not just the id)
+  - id: the id for the clone
+  - target: the container to place the clone in
+  - styles: additional styles for the clone
+  - placeOn:(optional) an element the clone should be placed on
 - 
