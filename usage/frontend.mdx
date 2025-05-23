@@ -4,14 +4,36 @@ title: "Frontend: General"
 
 ## Notifications
 
-The X.js template comes with the function setupNotifications already filled with the predefined notifications. Here you can just add your own. They duration of them are all multiples of this.animDuration, which is used in animation functions of this library. If you use them, you just need to add the number of animations in here.\
-For each of your notifications you need to define the function notif_NAME (ex. `notif_playCard: function(args){}`)
+The X.js template comes with the function setupNotifications already filled with the predefined notifications. Here you can just add your own. They duration of them are all multiples of this.animDuration, which is used in animation functions of this library. If you use them, you just need to add the number of animations in here.  
+For each of your notifications you need to define the function notif_\<name\> (ex. `notif_playCard: function(args){}`)
 
-## Useful functions
+## Usefull functions
 
 The library also provides many helpfull functions that all be called using this.functionName()
 
-- `takeAction(action, args = {}, lock=true)` \
-  calls bgaPerformAction with the args. if not present it adds 'act' before the action name and uppercases the first letter. if the 3rd parameter is false, it uses {lock:false, checkAction:false}\
+- `takeAction(action, args = {}, lock=true)`  
+  calls bgaPerformAction with the args. if not present it adds 'act' before the action  name and uppercases the first letter. if the 3rd parameter is false, it uses `{lock:false, checkAction:false}`  
   If an exception is thrown, it calls onLeavingState and shortly afterwards onEnteringState
-- `addTooltipImageAndText: function(id, image, text, col=true)`
+- `addTooltipImageAndText: function(id, image, text, col=true)`  
+  adds a tooltip containing image and text, with the text being below or next to the image depending on col  
+  The container has the class tooltipContainer
+- `getXY(type, cols=100)`  
+  Usefull for sprites. Converts an index (usually the type of an object) to x,y-coordinates given the number of columns. Example: `let {x,y} = this.getXY(9,4)`  results in x:1 and y:2
+- `getBgPos(type, cols=100)`  
+  same as above but returns the style background-position: -${x}00% -${y}00%;
+- `connect(node, f, cleanup=false, enable=false)`  
+  calls `dojo.connect(node, 'onclick', this, f)`  
+  if cleanup is true disconnects the handler on cleanup(see [playerturn](/usage/playerturnJS))  
+  if enable is true adds the style class 'selectable' to the node
+- `connectStock(stock, f, cleanup=true)`  
+  calls stock.setSelectionMode(1) and calls f with the id of an element once it's selected  
+  if cleanup is true, it will deselect all, setSelectionMode(0) and disconnect the handler on cleanup
+- `placeAndConnect(html, target, f, cleanup=false, enable=false)`  
+  just combines dojo.place and this.connect from above
+- `clone(el, id, target, styles, placeOn)`  
+  clones an element and optionally places it on another
+  - el: the element to clone(the node, not just the id)
+  - id: the id for the clone
+  - target: the container to place the clone in
+  - styles: additional styles for the clone
+  - placeOn:(optional) an element the clone should be placed on
